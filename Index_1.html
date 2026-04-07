@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UA Traffic Quality Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Montserrat', sans-serif;
+    background: #F0F2F8;
+    min-height: 100vh;
+    color: #1a1a3e;
+  }
+
+  .topbar {
+    background: #040078;
+    padding: 0 32px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .topbar-title {
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+
+  .topbar-sub {
+    color: #60E2B7;
+    font-size: 12px;
+    font-weight: 500;
+    margin-left: auto;
+  }
+
+  .page {
+    max-width: 800px;
+    margin: 32px auto;
+    padding: 0 16px;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #E2E5F0;
+    padding: 28px 32px;
+    margin-bottom: 16px;
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #040078;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #F0F2F8;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .form-group.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+
+  input, select {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: #1a1a3e;
+    background: #F8F9FC;
+    border: 1px solid #E2E5F0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color 0.15s, background 0.15s;
+    width: 100%;
+  }
+
+  input:focus, select:focus {
+    border-color: #0280FB;
+    background: #fff;
+  }
+
+  input::placeholder { color: #B0B4C4; }
+
+  .hint {
+    font-size: 11px;
+    color: #9CA3AF;
+    margin-top: 2px;
+  }
+
+  .run-btn {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    background: #040078;
+    border: none;
+    border-radius: 8px;
+    padding: 13px 28px;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    transition: background 0.15s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .run-btn:hover { background: #0a0099; }
+  .run-btn:active { transform: scale(0.98); }
+  .run-btn:disabled { background: #B0B4C4; cursor: not-allowed; transform: none; }
+
+  .btn-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .reset-btn {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: #6B7280;
+    background: none;
+    border: 1px solid #E2E5F0;
+    border-radius: 8px;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+
+  .reset-btn:hover { border-color: #6B7280; color: #1a1a3e; }
+
+  .status-box {
+    display: none;
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    border: 1px solid;
+  }
+
+  .status-box.running {
+    display: block;
+    background: #EFF6FF;
+    border-color: #BFDBFE;
+  }
+
+  .status-box.success {
+    display: block;
+    background: #ECFDF5;
+    border-color: #A7F3D0;
+  }
+
+  .status-box.error {
+    display: block;
+    background: #FEF2F2;
+    border-color: #FECACA;
+  }
+
+  .status-title {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .status-title.running { color: #1D4ED8; }
+  .status-title.success { color: #065F46; }
+  .status-title.error { color: #991B1B; }
+
+  .status-steps {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  .step {
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #4B5563;
+  }
+
+  .step-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .step.pending .step-dot { background: #E2E5F0; }
+  .step.active .step-dot { background: #0280FB; animation: pulse 1s infinite; }
+  .step.done .step-dot { background: #10B981; }
+  .step.done { color: #10B981; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .result-links {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .result-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: #fff;
+    border: 1px solid #A7F3D0;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #065F46;
+    font-size: 13px;
+    font-weight: 600;
+    transition: background 0.15s;
+  }
+
+  .result-link:hover { background: #F0FDF4; }
+
+  .result-link-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: #D1FAE5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .result-link-text { flex: 1; }
+  .result-link-text span { display: block; font-size: 11px; color: #6B7280; font-weight: 400; margin-top: 1px; }
+
+  .metric-preview {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  .metric-chip {
+    background: #F8F9FC;
+    border: 1px solid #E2E5F0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 11px;
+    color: #6B7280;
+  }
+
+  .metric-chip strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #040078;
+    margin-bottom: 2px;
+  }
+
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #BFDBFE;
+    border-top-color: #1D4ED8;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .section-desc {
+    font-size: 12px;
+    color: #9CA3AF;
+    margin-bottom: 20px;
+    margin-top: -8px;
+    line-height: 1.6;
+  }
+
+  .tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+
+  .tag.required { background: #FEF3C7; color: #92400E; }
+  .tag.optional { background: #F3F4F6; color: #6B7280; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <svg class="logo-icon" viewBox="0 0 28 28" fill="none">
+    <path d="M14 4C8.477 4 4 8.477 4 14s4.477 10 10 10 10-4.477 10-10S19.523 4 14 4z" fill="#0280FB" opacity="0.3"/>
+    <path d="M14 7c-3.866 0-7 3.134-7 7s3.134 7 7 7 7-3.134 7-7-3.134-7-7-7z" fill="#0280FB" opacity="0.5"/>
+    <circle cx="14" cy="14" r="4" fill="#60E2B7"/>
+  </svg>
+  <span class="topbar-title">UA Traffic Quality Analysis</span>
+  <span class="topbar-sub">Moloco Internal Tool</span>
+</div>
+
+<div class="page">
+
+  <!-- Status Box -->
+  <div class="status-box" id="statusBox">
+    <div class="status-title" id="statusTitle">
+      <div class="spinner" id="statusSpinner"></div>
+      <span id="statusTitleText">Running analysis...</span>
+    </div>
+    <div id="statusBody"></div>
+  </div>
+
+  <!-- Campaign Config -->
+  <div class="card">
+    <div class="card-title">Campaign Configuration</div>
+    <p class="section-desc">Set the advertiser and campaign parameters. All fields marked required must be filled before running.</p>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Advertiser ID <span class="tag required">Required</span></label>
+        <input type="text" id="advertiserId" placeholder="e.g. zRigMPZDremytkeZ" />
+        <span class="hint">Moloco advertiser ID (not bundle ID)</span>
+      </div>
+
+      <div class="form-group">
+        <label>Advertiser Name <span class="tag required">Required</span></label>
+        <input type="text" id="advertiserName" placeholder="e.g. 네이버페이" />
+        <span class="hint">Used in report titles</span>
+      </div>
+
+      <div class="form-group">
+        <label>Campaign OS <span class="tag required">Required</span></label>
+        <select id="campaignOS">
+          <option value="ANDROID">Android</option>
+          <option value="IOS">iOS</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Campaign Country <span class="tag required">Required</span></label>
+        <input type="text" id="campaignCountry" placeholder="e.g. KOR" maxlength="3" style="text-transform: uppercase;" />
+        <span class="hint">ISO 3-letter country code</span>
+      </div>
+
+      <div class="form-group">
+        <label>Start Date <span class="tag required">Required</span></label>
+        <input type="date" id="startDate" />
+        <span class="hint">Local time (KST)</span>
+      </div>
+
+      <div class="form-group">
+        <label>End Date <span class="tag required">Required</span></label>
+        <input type="date" id="endDate" />
+        <span class="hint">Local time (KST)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Advanced Config -->
+  <div class="card">
+    <div class="card-title">Advanced Settings</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Custom Event <span class="tag optional">Optional</span></label>
+        <input type="text" id="customEvent" placeholder="af_app_opened" />
+        <span class="hint">App Landing analysis event name</span>
+      </div>
+
+      <div class="form-group">
+        <label>Timezone <span class="tag optional">Optional</span></label>
+        <select id="timezone">
+          <option value="Asia/Seoul">Asia/Seoul (KST)</option>
+          <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
+          <option value="Asia/Singapore">Asia/Singapore (SGT)</option>
+          <option value="America/New_York">America/New_York (ET)</option>
+          <option value="America/Los_Angeles">America/Los_Angeles (PT)</option>
+          <option value="Europe/London">Europe/London (GMT)</option>
+          <option value="UTC">UTC</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- What This Runs -->
+  <div class="card">
+    <div class="card-title">Analysis Checklist</div>
+    <p class="section-desc">Six queries run in sequence. Results are saved to a Google Sheet and a Slides deck is generated automatically.</p>
+    <div class="metric-preview">
+      <div class="metric-chip"><strong>CTIT</strong>Click to Install Time</div>
+      <div class="metric-chip"><strong>ITIT</strong>Impression to Install</div>
+      <div class="metric-chip"><strong>Landing</strong>App Open Time</div>
+      <div class="metric-chip"><strong>CTR–SOI</strong>Correlation</div>
+      <div class="metric-chip"><strong>VT–SOI</strong>Correlation</div>
+      <div class="metric-chip"><strong>Slides</strong>Auto-generated</div>
+    </div>
+  </div>
+
+  <!-- Run -->
+  <div class="card">
+    <div class="btn-row">
+      <button class="run-btn" id="runBtn" onclick="runAnalysis()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M4 3l9 5-9 5V3z" fill="white"/>
+        </svg>
+        Run Analysis
+      </button>
+      <button class="reset-btn" onclick="resetForm()">Reset form</button>
+      <span id="validationMsg" style="font-size:12px; color:#EF4444; display:none;"></span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  var STEPS = [
+    { id: 's0', label: 'Fetching UA campaigns' },
+    { id: 's1', label: 'Click to Install Time (CTIT)' },
+    { id: 's2', label: 'Impression to Install Time (VT)' },
+    { id: 's3', label: 'App Landing Time' },
+    { id: 's4', label: 'CTR vs Share of Install' },
+    { id: 's5', label: 'VT Ratio vs Share of Install' },
+    { id: 's6', label: 'Generating slides deck' }
+  ];
+
+  var currentStep = -1;
+
+  function getParams() {
+    return {
+      advertiserId: document.getElementById('advertiserId').value.trim(),
+      advertiserName: document.getElementById('advertiserName').value.trim(),
+      campaignOS: document.getElementById('campaignOS').value,
+      campaignCountry: document.getElementById('campaignCountry').value.trim().toUpperCase(),
+      startDate: document.getElementById('startDate').value,
+      endDate: document.getElementById('endDate').value,
+      customEvent: document.getElementById('customEvent').value.trim() || 'af_app_opened',
+      timezone: document.getElementById('timezone').value
+    };
+  }
+
+  function validate(params) {
+    if (!params.advertiserId) return 'Advertiser ID is required.';
+    if (!params.advertiserName) return 'Advertiser Name is required.';
+    if (!params.campaignCountry || params.campaignCountry.length !== 3) return 'Country code must be 3 letters (e.g. KOR).';
+    if (!params.startDate) return 'Start Date is required.';
+    if (!params.endDate) return 'End Date is required.';
+    if (params.startDate > params.endDate) return 'Start Date must be before End Date.';
+    return null;
+  }
+
+  function runAnalysis() {
+    var params = getParams();
+    var err = validate(params);
+    var msg = document.getElementById('validationMsg');
+
+    if (err) {
+      msg.textContent = err;
+      msg.style.display = 'inline';
+      return;
+    }
+    msg.style.display = 'none';
+
+    document.getElementById('runBtn').disabled = true;
+    currentStep = 0;
+    showRunning();
+
+    google.script.run
+      .withSuccessHandler(onSuccess)
+      .withFailureHandler(onError)
+      .runAllFromUI(params);
+
+    simulateSteps();
+  }
+
+  function simulateSteps() {
+    var delay = 0;
+    var stepTimes = [3000, 8000, 8000, 8000, 5000, 5000, 12000];
+    stepTimes.forEach(function(t, i) {
+      delay += t;
+      setTimeout(function() { advanceStep(i); }, delay);
+    });
+  }
+
+  function advanceStep(index) {
+    currentStep = index + 1;
+    renderSteps();
+  }
+
+  function showRunning() {
+    var box = document.getElementById('statusBox');
+    box.className = 'status-box running';
+    document.getElementById('statusSpinner').style.display = 'block';
+    document.getElementById('statusTitle').className = 'status-title running';
+    document.getElementById('statusTitleText').textContent = 'Running analysis — this takes about 60 seconds…';
+    renderSteps();
+    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function renderSteps() {
+    var html = '<ul class="status-steps">';
+    STEPS.forEach(function(s, i) {
+      var cls = i < currentStep ? 'done' : (i === currentStep ? 'active' : 'pending');
+      var label = i < currentStep ? '✓ ' + s.label : s.label;
+      html += '<li class="step ' + cls + '"><div class="step-dot"></div>' + label + '</li>';
+    });
+    html += '</ul>';
+    document.getElementById('statusBody').innerHTML = html;
+  }
+
+  function onSuccess(result) {
+    currentStep = STEPS.length;
+    renderSteps();
+
+    var box = document.getElementById('statusBox');
+    box.className = 'status-box success';
+    document.getElementById('statusSpinner').style.display = 'none';
+    document.getElementById('statusTitle').className = 'status-title success';
+    document.getElementById('statusTitleText').textContent = 'Analysis complete';
+
+    var linksHtml = '<div class="result-links">';
+    if (result.slidesUrl) {
+      linksHtml += '<a class="result-link" href="' + result.slidesUrl + '" target="_blank">' +
+        '<div class="result-link-icon">📊</div>' +
+        '<div class="result-link-text">Traffic Quality Report<span>Google Slides — open to view results</span></div>' +
+        '<span style="color:#6B7280; font-size:12px;">Open →</span></a>';
+    }
+    if (result.sheetUrl) {
+      linksHtml += '<a class="result-link" href="' + result.sheetUrl + '" target="_blank">' +
+        '<div class="result-link-icon">📋</div>' +
+        '<div class="result-link-text">Raw Data Spreadsheet<span>Google Sheets — all query results</span></div>' +
+        '<span style="color:#6B7280; font-size:12px;">Open →</span></a>';
+    }
+    linksHtml += '</div>';
+
+    document.getElementById('statusBody').innerHTML += linksHtml;
+    document.getElementById('runBtn').disabled = false;
+  }
+
+  function onError(err) {
+    var box = document.getElementById('statusBox');
+    box.className = 'status-box error';
+    document.getElementById('statusSpinner').style.display = 'none';
+    document.getElementById('statusTitle').className = 'status-title error';
+    document.getElementById('statusTitleText').textContent = 'Analysis failed';
+    document.getElementById('statusBody').innerHTML =
+      '<p style="font-size:13px; color:#991B1B; margin-top:8px;">' + (err.message || String(err)) + '</p>' +
+      '<p style="font-size:11px; color:#9CA3AF; margin-top:6px;">Check the Apps Script logs for more detail.</p>';
+    document.getElementById('runBtn').disabled = false;
+  }
+
+  function resetForm() {
+    document.getElementById('advertiserId').value = '';
+    document.getElementById('advertiserName').value = '';
+    document.getElementById('campaignOS').value = 'ANDROID';
+    document.getElementById('campaignCountry').value = '';
+    document.getElementById('startDate').value = '';
+    document.getElementById('endDate').value = '';
+    document.getElementById('customEvent').value = '';
+    document.getElementById('timezone').value = 'Asia/Seoul';
+    document.getElementById('statusBox').className = 'status-box';
+    document.getElementById('validationMsg').style.display = 'none';
+  }
+
+  (function setDefaults() {
+    var today = new Date();
+    var y = today.getFullYear();
+    var m = today.getMonth();
+    var firstDay = new Date(y, m - 1, 1);
+    var lastDay = new Date(y, m, 0);
+    document.getElementById('startDate').value = firstDay.toISOString().split('T')[0];
+    document.getElementById('endDate').value = lastDay.toISOString().split('T')[0];
+  })();
+</script>
+
+</body>
+</html>
